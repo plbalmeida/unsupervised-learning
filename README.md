@@ -6,4 +6,4 @@ Muitas vezes no aprendizado de máquina o objetivo é encontrar padrões nos dad
 
 Baseado no curso Unsupervised Learning with R
 
-Em construção ;*
+# Em construção ;*
