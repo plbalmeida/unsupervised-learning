@@ -58,3 +58,5 @@ plot(x, col = km.out$cluster,
      xlab = "", ylab = "")
 
 ```
+
+# Código em construção 
