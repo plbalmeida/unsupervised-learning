@@ -1,0 +1,60 @@
+---
+title: "Aprendizagem Não Supervisionada em R"
+author: "Pedro Almeida"
+date: "2 de abril de 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Muitas vezes no aprendizado de máquina o objetivo é encontrar padrões nos dados sem tentar fazer previsões, isso é chamado de aprendizagem não supervisionada. É comum usar a aprendizagem não supervisionada para agrupar consumidores com base em dados demográficos e histórico de compras para campanhas de marketing direcionadas. Outro exemplo é querer descrever os fatores não medidos que mais influenciam as diferenças entre cidades. Este tutorial é uma introdução básica às técnicas de cluster e redução de dimensionalidade em R a partir de uma perspectiva de aprendizado de máquina.
+
+## 1) k-means
+
+O algoritmo k-means é amplamente usado para realizar a tarefa de cluster nos dados (cluster = "agrupamento" em português). Problemas que demandam realizar clusters são:
+* Determinar agrupamentos de casas para venda com base no tamanho, número de quartos, etc;
+* Determinar se há padrões comuns de demografia de pessoas para um segmento do mercado;
+
+Vou usar o dataset "x" no qual possui duas dimensões que usarei para criar um modelo de k-means usando 3 clusters, em seguida examinarei a estrutura do modelo resultante usando a função summary().
+
+```{r, message=FALSE, warning=FALSE}
+
+# carregando os dados
+x <- read.csv("x.csv", header = FALSE, ";")
+x$V1 <- as.numeric(x$V1)
+x$V2 <- as.numeric(x$V2)
+
+# criando o modelo de k-means: km.out
+km.out <- kmeans(x, centers = 3, nstart = 20)
+
+# verificando o modelo
+summary(km.out)
+
+```
+
+A função kmeans() produz várias saídas. A seguir, acessarei a componente do cluster diretamente. Isso é útil sempre que você precisar da associação de cluster para cada observação dos dados usados para construir o modelo de armazenamento em cluster. Mais adiante mostrarei um exemplo de como essa associação de cluster pode ser usada para ajudar a comunicar os resultados da modelagem k-means.
+
+Nos modelos k-means é possível visualizarmos os resultados da modelagem usando a função print() ou simplesmente digitando o nome do modelo.
+
+```{r, message=FALSE, warning=FALSE}
+
+# visualizando a componente de cluster
+km.out$cluster
+
+# visualizando a saída do modelo
+km.out
+
+```
+
+Uma das maneiras mais intuitivas de interpretar os resultados dos modelos k-means é plotando os dados como um gráfico de dispersão e usando cores para rotular a associação de cluster das amostras. Vou usar a função plot() padrão para realizar isso.
+
+```{r, message=FALSE, warning=FALSE}
+
+# gráfico de dispersão x
+plot(x, col = km.out$cluster,
+     main = "k-means with 3 clusters", 
+     xlab = "", ylab = "")
+
+```
