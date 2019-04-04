@@ -22,9 +22,8 @@ Vou usar o dataset "x" no qual possui duas dimensões que usarei para criar um m
 ```{r, message=FALSE, warning=FALSE}
 
 # carregando os dados
-x <- read.csv("x.csv", header = FALSE, ";")
-x$V1 <- as.numeric(x$V1)
-x$V2 <- as.numeric(x$V2)
+library(readxl) # pacote necessário para ler o arquivo
+x <- read_xlsx("x.xlsx", sheet = 1)
 
 # criando o modelo de k-means: km.out
 km.out <- kmeans(x, centers = 3, nstart = 20)
@@ -48,6 +47,8 @@ km.out
 
 ```
 
+ ### 1.1) Visualizando clusters
+
 Uma das maneiras mais intuitivas de interpretar os resultados dos modelos k-means é plotando os dados como um gráfico de dispersão e usando cores para rotular a associação de cluster das amostras. Vou usar a função plot() padrão para realizar isso.
 
 ```{r, message=FALSE, warning=FALSE}
@@ -59,4 +60,113 @@ plot(x, col = km.out$cluster,
 
 ```
 
-# Código em construção 
+### 1.2) Aleatoriedade do algoritmo k-means
+
+A função kmeans() gera aleatoriamente os centros de clusters, essa aleatoriedade pode resultar em diferentes cluster a cada vez que executar o modelo. Além disso, essa geração aleatória pode resultar em diferentes locais mínimos para o algoritmo k-means. A seguir vou demonstrar os dois resultados.
+
+No topo de cada gráfico, a medida da qualidade do modelo será plotada, assim podemos ver os modelos com os melhores resultados.
+
+Como o kmeans() gera as observações para clusters aleatoriamente, é importante definir o gerador de números aleatórios para podermos reproduzir o resultado do modelo.
+
+
+```{r, message=FALSE, warning=FALSE}
+
+# configurando a grade de 2x3
+par(mfrow = c(2, 3))
+
+# para reprodução dos resultados do modelo
+set.seed(1)
+
+for(i in 1:6) {
+  # rodando o kmeans() com 3 clusters 1 começo
+  km.out <- kmeans(x, centers = 3, nstart = 1)
+  # visualizando os clusters
+  plot(x, col = km.out$cluster, 
+       main = km.out$tot.withinss, 
+       xlab = "", ylab = "")
+}
+
+```
+
+Por conta da geração aleatória do algoritmo k-means, há bastante variação entre as métricas de qualidade do cluster entre os seis modelos.
+
+### 1.3) Selecionando o número de clusters
+
+O algoritmo k-means assume o número de clusters como parte do input. Se você souber antecipadamente o número de clusters (por exemplo, devido a certas características do negócio), isso facilita a configuração do número de clusters. No entanto, se não souber o número de clusters e precisar determiná-lo, será necessário executar o algoritmo várias vezes, cada vez com um número diferente de clusters. A partir disso, você pode observar como a métrica da qualidade do modelo muda com o número de clusters.
+
+A seguir vou executar o kmeans() várias vezes para ver como a qualidade do modelo é alterada conforme o número de clusters é alterado. Os gráficos que exibem essas informações ajudam a determinar o número de clusters e são geralmente chamados de scree plot.
+
+O ideal é visualizar um cotovelo onde a métrica de qualidade melhora mais lentamente à medida que o número de agrupamentos aumenta. Isso indica que a qualidade do modelo não está mais melhorando substancialmente à medida que a complexidade do modelo (ou seja, o número de clusters) aumenta. Em outras palavras, o cotovelo indica o número de clusters inerentes aos dados.
+
+```{r, message=FALSE, warning=FALSE}
+
+# começando com a soma total dos erros ao quadrado: wss
+wss <- 0
+
+# de 1 a 15 centros de cluster
+for (i in 1:15) {
+  km.out <- kmeans(x, centers = i, nstart = 20)
+  # salvando a soma total dos quadrados no objeto wss
+  wss[i] <- km.out$tot.withinss
+}
+
+# visualizando a soma total dos quadrados X o número de clusters
+plot(1:15, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+# configurando o k
+k <- 2  # 3 também seria ok
+
+```
+
+Olhando para o scree plot parece que existem 2 ou 3 clusters nos dados.
+
+### 1.4) Trabalhando com dados reais
+
+Lidar com dados reais costuma ser mais desafiador do que lidar com dados sintéticos. Os dados sintéticos ajudam a aprender novos conceitos e técnicas, mas a seguir vamos lidar com dados mais reais, no qual podemos encontrar em nossas atividades profissionais ou acadêmicas.
+
+Usarei aqui os dados do Pokemon disponível no site do kaggle. O primeiro desafio com os dados do Pokemon é que não há um número pré-determinado de clusters. Você determinará o número apropriado de grupos, tendo em mente que, em dados reais, o cotovelo do scree plot pode ser saliente do que em dados sintéticos. Use seu julgamento para determinar o número de clusters se quiser.
+
+Uma observação adicional: este exercício utiliza o argumento iter.max para kmeans(). Como você viu, kmeans() é um algoritmo iterativo, repetindo várias vezes até que algum critério de parada seja atingido. O número padrão de iterações para kmeans() é 10, o que não é suficiente para o algoritmo convergir e atingir seu critério de parada, portanto, definiremos o número de iterações como 50 para superar esse problema. Para ver o que acontece quando o kmeans() não converge, tente executar o exemplo com um número menor de iterações (por exemplo, 3). Este é outro exemplo do que pode acontecer quando você trabalha com dados reais.
+
+```{r, message=FALSE, warning=FALSE}
+
+# importando os dados do pokemon
+pokemon <- read.csv("Pokemon.csv", sep = ",")
+pokemon <- pokemon[,6:11]
+
+# começando com a soma total dos erros ao quadrado: wss
+wss <- 0
+
+# de 1 a 15 centros de cluster
+for (i in 1:15) {
+  km.out <- kmeans(pokemon, centers = i, nstart = 20, iter.max = 50)
+  # salvando a soma total dos quadrados no objeto wss
+  wss[i] <- km.out$tot.withinss
+}
+
+# visualizando a soma total dos quadrados X o número de clusters
+plot(1:15, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+# selecionando o número de clusters (pode ser 2, 3 ou 4...)
+k <- 3
+
+# construindo o modelo com k clusters: km.out
+km.out <- kmeans(pokemon, centers = k, nstart = 20, iter.max = 50)
+
+# visualizando os resultados do modelo
+km.out
+
+# visualizando os clusters de defesa X velocidade
+plot(pokemon[, c("Defense", "Speed")],
+     col = km.out$cluster,
+     main = paste("k-means clustering of Pokemon with", k, "clusters"),
+     xlab = "Defense", 
+     ylab = "Speed")
+
+```
+
+# Código em construção ;* 
