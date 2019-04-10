@@ -141,9 +141,9 @@ wss <- 0
 
 # de 1 a 15 centros de cluster
 for (i in 1:15) {
-  km.out <- kmeans(pokemon, centers = i, nstart = 20, iter.max = 50)
+  km.pokemon <- kmeans(pokemon, centers = i, nstart = 20, iter.max = 50)
   # salvando a soma total dos quadrados no objeto wss
-  wss[i] <- km.out$tot.withinss
+  wss[i] <- km.pokemon$tot.withinss
 }
 
 # visualizando a soma total dos quadrados X o número de clusters
@@ -155,18 +155,129 @@ plot(1:15, wss, type = "b",
 k <- 3
 
 # construindo o modelo com k clusters: km.out
-km.out <- kmeans(pokemon, centers = k, nstart = 20, iter.max = 50)
+km.pokemon <- kmeans(pokemon, centers = k, nstart = 20, iter.max = 50)
 
 # visualizando os resultados do modelo
-km.out
+km.pokemon
 
 # visualizando os clusters de defesa X velocidade
 plot(pokemon[, c("Defense", "Speed")],
-     col = km.out$cluster,
+     col = km.pokemon$cluster,
      main = paste("k-means clustering of Pokemon with", k, "clusters"),
      xlab = "Defense", 
      ylab = "Speed")
 
 ```
+
+## 2) Clustering hierárquico
+
+O clustering hierárquico é outro método popular de clustering. O objetivo deste capítulo é mostrar como ele funciona, como usá-lo e como ele se compara ao k-means.
+
+### 2.1) Modelo simples de clustering hierárquico
+
+A seguir vou criar o nosso primeiro modelo de clustering hierárquico usando a função hclust(). Usarei o dataset "z" para criar um modelo de clustering hierárquico. O primeiro passo para o modelo de clustering hierárquico é determinar a similaridade entre observações, usando a função dist(). Ao final vou examinar a estrutura do modelo resultante usando a função summary().
+
+
+```{r, message=FALSE, warning=FALSE}
+
+# carregadno o dataset z
+z <- read_xlsx("z.xlsx", sheet = 1)
+
+# criando o modelo de clustering hierárquico
+hclust.out <- hclust(dist(z))
+
+# verificando os resultados
+summary(hclust.out)
+
+```
+
+Agora que criamos nosso primeiro modelo de clustering hierárquico, vamos aprender como usá-lo para resolver problemas.
+
+### 2.2) Podando a árvore
+
+Usaremos a função cutree() que corta horizontalmente o modelo hierárquico. Os argumentos h e k do cutree() permitem cortar a árvore com base em uma certa altura h ou com um determinado número de clusters k. A seguir vou usar o cutree() para cortar o modelo hierárquico criado anteriormente com base em cada um desses dois critérios.
+
+```{r, message=FALSE, warning=FALSE}
+
+# podando pela altura
+cutree(hclust.out, h = 7)
+
+# podando pelo número de clusters
+cutree(hclust.out, k = 3)
+
+```
+
+Se você está se perguntando o que significa esse output, lembre-se, existem 50 observações no dataset x. O output do cutree() representa as atribuições de cluster para cada observação no dataset original ;)
+
+### 2.3) Métodos de ligação
+
+Agora vou explorar modelos de clustering hierárquico usando diferentes métodos de ligação e vou plotar o dendrograma de cada um, para observarmos a estrutura geral das árvores.
+
+```{r, message=FALSE, warning=FALSE}
+
+# cluster usando a ligação "complete"
+hclust.complete <- hclust(dist(z), method = "complete")
+
+# cluster usando a ligação "average"
+hclust.average <- hclust(dist(z), method = "average")
+
+# cluster usando a ligação "single"
+hclust.single <- hclust(dist(z), method = "single")
+
+# plotando o dendograma que usa a ligação "complete"
+plot(hclust.complete, main = "Complete")
+
+# plotando o dendograma que usa a ligação "average"
+plot(hclust.average, main = "Average")
+
+# plotando o dendograma que usa a ligação "single"
+plot(hclust.single, main = "Single")
+
+```
+
+Antes de continuarmos, verifique os gráficos para comparar os três dendrogramas, vou explicar a seguir sobre as implicações dessas diferenças!
+
+É visível que as ligações "complete" e "average" produzem clusters mais equilibrados. Ter árvores balanceadas ou não balanceadas para seu modelo hierárquico de clustering, vai depender do contexto do problema que você está tentando resolver. Árvores equilibradas são essenciais se você quer um número par de observações atribuídas a cada cluster. Por outro lado, se você quiser detectar valores discrepantes por exemplo, uma árvore desequilibrada é mais adequada porque a remoção de uma árvore não balanceada pode resultar na maioria das observações atribuídas a um cluster, e apenas algumas observações atribuídas a outros clusters.
+
+### 2.3) Questões práticas: dimensionamento
+
+Lembre-se de que os dados reais em cluster podem exigir o dimensionamento dos recursos se eles tiverem distribuições diferentes. Até agora, trabalhei com dados sintéticos que não precisam de escalonamento.
+
+A seguir voltarei a trabalhar com dados reais, usarei o dataset pokemon novamente. Vamos observar a distribuição (média e desvio
+padrão) de cada recurso, dimensionar os dados de acordo, e em seguida produzir um modelo de agrupamento hierárquico usando o método de ligação completo. 
+
+```{r, message=FALSE, warning=FALSE}
+
+# verificando o nome das colunas do dataset
+colMeans(pokemon)
+
+# verificando o desvio padrão das compenentes do dataset
+apply(pokemon, 2, sd)
+
+# escalonando os dados
+pokemon.scaled <- scale(pokemon)
+
+# criando o modelo de clustering hierárquico
+hclust.pokemon <- hclust(dist(pokemon.scaled), method = "complete")
+
+```
+
+Vamos rapidamente recapitular o que acabei de fazer: 1) Verifiquei primeiro se as médias das colunas e os desvios padrão variam; 2) Por causa disso, escalei os dados; 3) Converti os dados escalados para uma matriz de similaridade e as passei para a função hclust()
+
+### 2.4) Comparando kmeans() e hclust()
+
+Agora vou comparar o k-means e o clustering hierárquico, vamos ver como esses dois métodos produzem diferentes associações de cluster. Isso ocorre porque os dois algoritmos fazem suposições diferentes sobre como os dados são gerados. A seguir vou comparar os resultados dos dois modelos do dataset pokemon para ver como eles são diferentes.
+
+```{r, message=FALSE, warning=FALSE}
+
+# aplicando a função cutree() no hclust.pokemon
+cut.pokemon <- cutree(hclust.pokemon, k = 3)
+
+# comparando os métodos
+table(km.pokemon$cluster, cut.pokemon)
+
+```
+
+Olhando para a tabela, parece que o modelo hierárquico de clustering atribui a maioria das observações ao cluster 1, enquanto o algoritmo k-means distribui as observações de forma relativamente uniforme entre todos os clusters. É importante notar que não há consenso sobre qual método produz melhores clusters. O trabalho do analista para o clustering não supervisionado é observar as atribuições do cluster e fazer uma avaliação de quanto cada método fornece mais insights sobre os dados!
 
 # Código em construção ;* 
