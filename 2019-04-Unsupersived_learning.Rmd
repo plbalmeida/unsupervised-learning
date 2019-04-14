@@ -134,14 +134,14 @@ Uma observação adicional: este exercício utiliza o argumento iter.max para km
 
 # importando os dados do pokemon
 pokemon <- read.csv("Pokemon.csv", sep = ",")
-pokemon <- pokemon[,6:11]
+pokemon1 <- pokemon[,6:11]
 
 # começando com a soma total dos erros ao quadrado: wss
 wss <- 0
 
 # de 1 a 15 centros de cluster
 for (i in 1:15) {
-  km.pokemon <- kmeans(pokemon, centers = i, nstart = 20, iter.max = 50)
+  km.pokemon <- kmeans(pokemon1, centers = i, nstart = 20, iter.max = 50)
   # salvando a soma total dos quadrados no objeto wss
   wss[i] <- km.pokemon$tot.withinss
 }
@@ -155,7 +155,7 @@ plot(1:15, wss, type = "b",
 k <- 3
 
 # construindo o modelo com k clusters: km.out
-km.pokemon <- kmeans(pokemon, centers = k, nstart = 20, iter.max = 50)
+km.pokemon <- kmeans(pokemon1, centers = k, nstart = 20, iter.max = 50)
 
 # visualizando os resultados do modelo
 km.pokemon
@@ -248,14 +248,14 @@ padrão) de cada recurso, dimensionar os dados de acordo, e em seguida produzir 
 
 ```{r, message=FALSE, warning=FALSE}
 
-# verificando o nome das colunas do dataset
-colMeans(pokemon)
+# verificando a média das colunas do dataset
+colMeans(pokemon[6:11])
 
 # verificando o desvio padrão das compenentes do dataset
-apply(pokemon, 2, sd)
+apply(pokemon[6:11], 2, sd)
 
 # escalonando os dados
-pokemon.scaled <- scale(pokemon)
+pokemon.scaled <- scale(pokemon[6:11])
 
 # criando o modelo de clustering hierárquico
 hclust.pokemon <- hclust(dist(pokemon.scaled), method = "complete")
@@ -278,6 +278,362 @@ table(km.pokemon$cluster, cut.pokemon)
 
 ```
 
-Olhando para a tabela, parece que o modelo hierárquico de clustering atribui a maioria das observações ao cluster 1, enquanto o algoritmo k-means distribui as observações de forma relativamente uniforme entre todos os clusters. É importante notar que não há consenso sobre qual método produz melhores clusters. O trabalho do analista para o clustering não supervisionado é observar as atribuições do cluster e fazer uma avaliação de quanto cada método fornece mais insights sobre os dados!
+Olhando para a tabela, parece que o modelo de clustering hierárquico atribui a maioria das observações ao cluster 1, enquanto o algoritmo k-means distribui as observações de forma relativamente uniforme entre todos os clusters. É importante notar que não há consenso sobre qual método produz melhores clusters. O trabalho do analista para o clustering não supervisionado é observar as atribuições do cluster e fazer uma avaliação de quanto cada método fornece mais insights sobre os dados!
+
+## 3) Redução de dimensionalidade com PCA
+
+Trabalhando como cientista de dados, frequentemente você terá que lidar com datasets desordenados e com alta dimensão. A seguir mostrarei como usar a  PCA (Principal Component Analysis) para reduzir efetivamente a dimensionalidade desses tipos de datasets, de modo que fique mais fácil extrair insights deles.
+
+Bom, mas o que a PCA faz?
+
+* 1) a PCA permite remover o ruído causado pela correlação entre as variáveis, na prática ela decompõe a matriz de correlação;
+
+* 2) a PCA muda as o sistema de coordenadas original e estabelece novas dimensões no qual são chamdas de **componentes principais**;
+
+* 3) e por último a PCA revela a verdadeira dimensionalidade dos dados, na prática a PCA nos ajuda reduzindo o número de dimensões;
+
+Conceitualmente existem 5 passos para realizar a PCA:
+
+A (1) centralização e a (2) padronização são duas etapas necessárias na fase de pré-processamento, a (3) rotação e a (4) projeção expressam a mudança no sistema de coordenadas para um novo sistema de coordenadas com as componentes principais nos seus eixos, e finalmente, nós podemos (5) reduzir a dimensionalidade dos dados baseada na variância explicada das componentes principais.  
+
+A centralização e padronização essencialmente movem os dados para diferentes posições dentro do mesmo sistema de coordenadas, no entanto, deixando a forma da nuvem de pontos inalterada:
+
+<center>
+![](pca_1.gif)
+</center>
+
+Os próximos dois passos implementam a mudança de perspectiva das variáveis originais para as componentes principais, cada um dos novos componentes extraídos é ortogonal ao anterior, e por fim acabaremos com uma nova representação não-reduzida dos dados, em que os eixos x e y correspondem aos dois primeiros componentes principais extraídos:
+
+<center>
+![](pca_2.gif)
+</center>
+
+Reduzir a dimensionalidade dos dados envolve uma decisão sobre quais das novas dimensões podemos manter e ainda explicar a maior parte da variação. O scree plot é um gráfico que coloca as componentes principais recém extraídas em ordem decrescente com base na porcentagem de variância explicada. Quase 85% da variação nos dados originais é explicada pelos dois primeiros componentes. Isso é um bom sinal, pois usar apenas duas das onze dimensões do dataset mtcars nos deixa mais tranquilo em relação a perda de informação.
+
+<center>
+![](pca_3.gif)
+</center>
+
+O R possui a função prcomp() para realizar a PCA sobre os dados, o output dessa função contém um índice com a carga das variáveis. Como exemplo usarei um mtcars para demonstrar:
+
+```{r, message=FALSE, warning=FALSE}
+
+# PCA com prcomp()
+mtcars_pca <- prcomp(mtcars)
+mtcars_pca
+
+```
+
+O pacote FactorMineR que nós usaremos nesse tutorial oferece a coleção mais completa de métodos de extração/estimativa para PCA, a função PCA() usa um conjunto de dados ou matriz de correlação e gera dois gráficos e uma série de índices informativos para cinco dimensões. A PCA(), ao contrário de prcomp(), não retorna as cargas, mas as coordenadas das variáveis na nova representação de dados.  
+
+```{r, message=FALSE, warning=FALSE}
+
+# carregando o FactorMineR
+library(FactoMineR)
+
+# PCA com PCA() do FactorMineR
+mtcars_pca <- PCA(mtcars)
+mtcars_pca
+
+```
+
+Agora vamos nos concentrar no mapa de fatores da variável para interpretar o modelo de PCA. Na primeira componente principal (eixo horizontal), variáveis como cyl (número de cilindros), wt (peso) e disp (deslocamento em polegadas cúbicas) possuem valores positivos e estão localizadas na extremidade direita, enquanto mpg (milhas por galão) fica no lado exatamente oposto, tendo valores negativos. Uma explicação plausível é que a primeira componente principal separa carros que são "potentes e pesados" do lado direito, daqueles que são "econômicos e leves" no lado esquerdo. A segunda componente principal parece revelar outra característica oculta do dataset mtcars relacionada a velocidade. Os carros com muitas marchas são colocados mais ao alto, enquanto os mais lentos, que têm valores mais altos para qsec (1/4 de milha), possuem valores mais baixos na segunda componente principal.
+
+A propriedade *eig* da PCA() gera uma matriz com três colunas, sendo as mais importantes as porcentagens de variância explicada e variância acumulada explicada pelos componentes principais. 
+
+```{r, message=FALSE, warning=FALSE}
+
+mtcars_pca$eig
+
+```
+
+*cos2* significa cosseno ao quadrado e é um índice para a qualidade de representação de variáveis e indivíduos, quanto mais próximo este valor for de um, melhor será a qualidade.
+
+```{r, message=FALSE, warning=FALSE}
+
+mtcars_pca$var$cos2
+
+```
+
+O *mtcars_pca$var$contrib* demonstra as contribuições em porcentagem de todas as variáveis na determinação da componente principal, enquanto a função *dimdesc()* mostra as variáveis mais correlacionadas às primeiras componentes principais.
+
+```{r, message=FALSE, warning=FALSE}
+
+mtcars_pca$var$contrib
+
+dimdesc(mtcars_pca)
+
+```
+
+Legal, agora estamos prontos para aplicar tudo isso em outro dataset!
+
+### 3.1) PCA com FactoMineR
+
+Como vimos anteriormente, o FactoMineR é um pacote muito útil, rico em funcionalidades, que implementa vários métodos de redução de dimensionalidade. Sua função para fazer a PCA é PCA(). Lembre-se que a PCA(), por padrão, gera 2 gráficos e extrai os 5 primeiras componentes principais. Você pode usar o argumento ncp para definir manualmente o número de dimensões a serem mantidas.
+
+Você também pode usar a função summary() para obter uma rápida visão geral dos índices das três primeiras componentes principais. Além disso, para extrair sumários de algumas das linhas em um conjunto de dados, você pode especificar o argumento nbelements.
+
+```{r, message=FALSE, warning=FALSE}
+
+# carregando o dataset cars
+cars <- read.csv("cars.csv", sep = ";")
+rownames(cars) <- cars$Model
+
+# rodando a PCA para do dataset cars
+pca_output_ten_v <- PCA(cars[,9:19], ncp = 4, graph = FALSE)
+
+# resumo dos 10 primeiros carros
+summary(pca_output_ten_v, nbelements = 100)
+
+# variância das 3 primeiras dimensões
+pca_output_ten_v$eig[,2][1:3]
+
+# variância acumulada
+pca_output_ten_v$eig[,3][1:3]
+
+```
+
+### 3.2) Explorando a função PCA()
+
+A função PCA() fornece grande flexibilidade em seu uso. Você pode optar por ignorar algumas das variáveis ou indivíduos originais na construção de um modelo de PCA fornecendo à PCA() o argumento ind.sup para indivíduos suplementares e quanti.sup ou quali.sup para variáveis quantitativas e qualitativas, respectivamente. Indivíduos e variáveis suplementares são linhas e variáveis dos dados originais ignorados durante a construção do modelo.
+
+Nosso objetivo de aprendizado neste exercício são:
+
+* conduzir a PCA considerando partes de um conjunto de dados;
+
+* inspecionar as variáveis mais correlacionadas com uma componente principal especificada;
+
+* encontrar a contribuição de variáveis na designação das primeiras 5 componentes principais;
+
+```{r, message=FALSE, warning=FALSE}
+
+# rodando a PCA com as variáveis ativas e suplementares
+pca_output_all <- PCA(cars[,-1], quanti.sup = 1:8, quali.sup = 20:21, graph = FALSE)
+
+# variáveis mais correlacionadas
+dimdesc(pca_output_all, axes = 1:2)
+
+# rodando a PCA das 100 primeiras categorias
+pca_output_hundred <- PCA(cars[,-1], quanti.sup = 1:8, quali.sup = 20:21, ind.sup = 101:nrow(cars), graph = FALSE)
+
+# verificando a contribuição das variáveis nas componentes principais 
+pca_output_hundred$var$contrib
+
+```
+
+Usamos os argumentos mais importantes da função PCA(), quali.sup, quanti.sup e ind.sup.
+
+### 3.3) PCA com ade4
+
+Agora que temos uma experiência prática com o FactoMineR, vamos dar uma olhada no ade4, um pacote do R bem conhecido e bem mantido com um grande número de métodos numéricos para construir e manipular modelos de PCA. dudi.pca() é a função principal que implementa o PCA para ade4 e, por padrão, é interativo: permite que o usuário insira o número de dimensões retidas. Para suprimir o modo interativo e inserir o número de eixos dentro da função dudi.pca(), você precisa definir o argumento scannf como FALSE e depois usar o argumento nf para configurar o número de eixos a serem retidos. 
+
+Vamos colocar o ade4 em prática e compará-lo com o FactoMineR!
+
+```{r, message=FALSE, warning=FALSE}
+
+# carregando o pacote ade4
+library(ade4)
+
+# rodando a PCA usando variáveis numéricas não-binárias
+cars_pca <- dudi.pca(cars[,9:19], scannf = FALSE, nf = 4)
+
+# resumo do cars_pca
+summary(cars_pca)
+
+# resumo do pca_output_ten_v
+summary(pca_output_ten_v)
+
+```
+
+Agora que sabemos como conduzir a PCA com a função dudi.pca() do ade4!
+
+### 3.4) Interpretando e visualizando modelos de PCA com factoextra
+
+Depois de criar seu primeiro modelo de PCA, você precisa ser capaz de interpretá-los apropriadamente. Interpretar os índices numéricos de PCA resultantes, os mais proeminentes dos quais são cossenos quadrados e contribuições, não é uma tarefa fácil e pode ser facilitada com o aspecto visual de mapas de fatores. Como você viu no vídeo anterior, a função PCA do FactorMineR exibe dois gráficos por padrão, os mapas do indivíduo e do fator. No entanto, aqui podemos usar factextra, um pacote de wrap-up que fornece visualizações do tipo ggplot2 de objetos do modelo PCA produzidos por vários pacotes R, incluindo o FactoMineR. A função fviz_pca_var() gera representações das contribuições das variáveis na construção dos componentes principais.
+
+```{r, message=FALSE, warning=FALSE}
+
+# carregando o pacote factoextra
+library(factoextra)
+
+```
+
+#### 3.4.1) Plotando a contribuição das variáveis
+
+Neste primeiro trecho de código, usamos os argumentos col.vars, para procurar variáveis de contribuição, gradient.cols para criar o efeito de gradiece na coloração das contribuições e repel para evitar a confusão de pontos.
+
+```{r, message=FALSE, warning=FALSE}
+
+fviz_pca_var(mtcars_pca, 
+ col.var = "contrib",
+ gradient.cols = c("#bb2e00", "#002bbb"),
+ repel = TRUE)
+
+```
+
+#### 3.4.2) Plotando as contribuições das variáveis selecionadas
+
+Para exibir a contribuição de variáveis selecionadas, ou seja, o top 4 em contribuição, em vez de col.var, fornecemos uma lista para o argumento select.var.
+
+```{r, message=FALSE, warning=FALSE}
+
+fviz_pca_var(mtcars_pca,
+ select.var = list(contrib = 4),
+ repel = TRUE)
+
+```
+
+#### 4.3.3) Plotando as contribuições das variáveis selecionadas pelo gráfico de barras
+
+Por último, fviz_contrib() produz barplots de individulas ou variáveis de contribuições (como no pedaço de código aqui). A linha vermelha corresponde à porcentagem esperada se a distribuição das contribuições fosse uniforme.
+
+```{r, message=FALSE, warning=FALSE}
+
+fviz_contrib(mtcars_pca,
+    choice = "var",
+    axes = 1,
+    top = 5)
+
+```
+
+#### 4.3.4) Plotando cos2 para indivíduos
+
+Um outro índice importante para interpretar modelos de PCA é o cosseno quadrado, abreviado como cos2 em FactoMineR e factextra. Esse índice reflete a precisão da representação de nossas variáveis ou indivíduos no plano da componente principal. Para plotar o cos2 dos indivíduos para mtcars_pca, precisamos apenas ajustar a função fviz_pca_ind(), ajustando o argumento col.ind para todos os indivíduos
+
+```{r, message=FALSE, warning=FALSE}
+
+fviz_pca_ind(mtcars_pca,
+    col.ind = "cos2",
+    gradient.cols = c("#bb2e00", "#002bbb"),
+    repel = TRUE)
+
+```
+
+#### 4.3.5) Plotando cos2 para variáveis selecionadas
+
+O argumento select.ind serve para visualizarmos indivíduos com um cos2 maior que um valor de 0,8, como exemplo.
+
+```{r, message=FALSE, warning=FALSE}
+
+fviz_pca_ind(mtcars_pca, 
+    select.ind = list(cos2 = 0.8),
+    gradient.cols = c("#bb2e00", "#002bbb"),
+    repel = TRUE)
+
+```
+
+#### 4.3.6) Gráfico de barras do co2 para indivíduos
+
+A função fviz_cos2() tem como output um gráfico de barras com a qualidade da representação de cada indivíduo.
+
+```{r, message=FALSE, warning=FALSE}
+
+fviz_cos2(mtcars_pca,
+    choice = "ind", 
+    axes = 1, 
+    top = 10)
+
+```
+
+#### 4.3.7) Biplots
+
+Os biplots são gráficos que oferecem um jeito compacto de resumir as relações entre indivíduos, entre as variáveis, e também entre as variáveis e os indivíduos, isso tudo no mesmo gráfico! Por exemplo, aplicando a função fviz_pca_biplot() do pacote factoextra no objeto mtcars_pca, a interpretação das componentes principais agora fornece melhores informações e é muito mais fácil.
+
+```{r, message=FALSE, warning=FALSE}
+
+fviz_pca_biplot(mtcars_pca)
+
+```
+
+Os carros localizados no canto à esquerda, como o Toyota Corona, na verdade são econômicos, mais lentos, com menos engrenagens e possuem transmissão automática, enquanto no lado superior direito encontramos o oposto, no caso o Maseratti, no qual é muito potente. O FactorMineR é flexível o suficiente para aplicar a PCA em subconjuntos de nossos dados, nesse caso, algumas variáveis qualitativas ou indivíduos podem ser consideradas complementares e não serem exploradas para a construção das componentes principais. Essa informação suplementar pode ser usada para adicionar elipsóides no biplot no qual permite avançarmos ainda mais na interpretação.
+
+Antes de usar fviz_pca_ind(), precisamos ter certeza de que há pelo menos uma variável qualitativa e que faz sentido usá-la como uma variável suplementar. A variável cyl (número de cilindros) é do tipo numérico, mas possui alguns valores e pode ser considerada como variável qualitativa, após ser convertida em um fator.
+
+```{r, message=FALSE, warning=FALSE}
+
+mtcars$cyl <- as.factor(mtcars$cyl)
+
+```
+
+Agora podemos usar o argumento addEllipses da função fviz_pca_ind() para criar as elipses e explorar os níveis da variável suplementar cyl para atribuir cores aos indivíduos. Parece que o cyl tem poder discriminativo suficiente para expressar as diferenças de valor na primeira componente principal.
+
+```{r, message=FALSE, warning=FALSE}
+
+fviz_pca_ind(mtcars_pca, 
+    label = "var",
+    habillage = mtcars$cyl,
+    addEllipses = TRUE)
+
+```
+
+### 4.4) Aplicando aos dados do cars
+
+#### 4.4.1) Plotando cos2
+
+Como vimos anteriormente, um índice importante nos modelos de PCA é o cosseno ao quadrado, abreviado em FactoMineR e factextra como cos2, ele mostra a precisão da representação de suas variáveis ou indivíduos no plano das componentes principais.
+
+O pacote factextra é excelente para lidar com modelos de PCA construídos com o FactoMineR. Aqui, você vai explorar a funcionalidade do factoextra. Usaremos o objeto pca_output_all para criar gráficos baseados no cos2, visualizações são fundamentais para entender o cos2.
+
+```{r, message=FALSE, warning=FALSE}
+
+# criando um mapa de fatores
+fviz_pca_var(pca_output_all, select.var = list(cos2 = 0.7), repel = TRUE)
+
+# modificando o código para criar uma mapa de fatores dos invíduos
+fviz_pca_ind(pca_output_all, select.ind = list(cos2 = 0.7), repel = TRUE)
+
+# criando gráfico de barras para as variáveis com maior cos2 na primeira componente principal
+fviz_cos2(pca_output_all, choice = "var", axes = 1, top = 10)
+
+# criando gráfico de barras para as variáveis com maior cos2 na segunda componente principal
+fviz_cos2(pca_output_all, choice = "var", axes = 2, top = 10)
+
+```
+
+Legal! Agora uma questão: o que o cos2 nos conta sobre a nova representação fornecida por seus modelos? Você pode dizer se eles são bons o suficiente em qualidade?
+
+#### 4.4.2) Plotando as contribuições
+
+Agora vamos preparar um número de gráficos para ajudá-lo a ter uma melhor percepção das contribuições das variáveis nas componentes principais extraídos. É importante ter em mente que as contribuições das variáveis significam, essencialmente, sua importância para a construção de um determinado componente principal.
+
+
+```{r, message=FALSE, warning=FALSE}
+
+# criando um mapa de fator para as top 5 variáveis com maiores contribuições
+fviz_pca_var(pca_output_all, select.var = list(contrib = 5), repel = TRUE)
+
+# criando um mapa de fator para os top 5 indivíduos com maiores contribuições
+fviz_pca_ind(pca_output_all, select.ind = list(contrib = 5), repel = TRUE)
+
+# criando um gráfico de barras pra as variáveis com maiores contribuições na primeira componente principal
+fviz_contrib(pca_output_all, choice = "var", axes = 1, top = 5)
+
+# criando um gráfico de barras pra as variáveis com maiores contribuições na segunda componente principal
+fviz_contrib(pca_output_all, choice = "var", axes = 2, top = 5)
+
+```
+
+Ótimo! Agora podemos entender a importância de uma variável na extração dos componentes principais! Você pode comparar os dois gráficos. Quais variáveis que estão em ambas as dimensões e quais estão em apenas em uma delas?
+
+#### 4.4.3) Biplots e seus elipsóides
+
+Como mencionado anteriormente, os biplots são gráficos que fornecem uma maneira compacta e resume as relações entre indivíduos, variáveis e também entre variáveis e indivíduos. Além disso, os elipsóides podem ser adicionados em cima de um biplot e oferecem uma visão geral muito melhor do biplot com base nos agrupamentos de variáveis e indivíduos.
+
+```{r, message=FALSE, warning=FALSE}
+
+# criando um biplot
+fviz_pca_biplot(pca_output_all)
+
+# criando elipsóides
+fviz_pca_ind(pca_output_all, habillage = cars$wheeltype, addEllipses = TRUE)
+
+# biplots com elipsóides
+fviz_pca_biplot(pca_output_all, habillage = cars$wheeltype, addEllipses = TRUE, alpha.var = "cos2")
+
+```
+
+Pergunta! O que significa quando duas variáveis estão próximas umas das outras em um biplot?
+
+R: Ambas variáveis possuem distância euclidiana pequena.
 
 # Código em construção ;* 
