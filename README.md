@@ -4,6 +4,6 @@ Muitas vezes no aprendizado de máquina o objetivo é encontrar padrões nos dad
 
 * O código está no formato do RMarkdown.
 
-Baseado no curso Unsupervised Learning with R da DataCamp
+Baseado nos cursos Unsupervised Learning with R e Dimensionality Reduction with R da DataCamp.
 
 # Em construção ;*
