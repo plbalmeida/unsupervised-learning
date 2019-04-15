@@ -27,14 +27,14 @@ Conteúdo do tutorial:
 3.4) Interpretando e visualizando modelos de PCA com factoextra;
 3.4.1) Plotando a contribuição das variáveis;
 3.4.2) Plotando as contribuições das variáveis selecionadas;
-4.4.3) Plotando as contribuições das variáveis selecionadas pelo gráfico de barras;
-4.3.4) Plotando cos2 para indivíduos;
-4.3.5) Plotando cos2 para variáveis selecionadas;
-4.3.6) Gráfico de barras do co2 para indivíduos;
-4.3.7) Biplots;
-4.4) Aplicando aos dados do cars;
-4.4.1) Plotando cos2;
-4.4.2) Plotando as contribuições;
-4.4.3) Biplots e seus elipsóides;
+3.4.3) Plotando as contribuições das variáveis selecionadas pelo gráfico de barras;
+3.4.4) Plotando cos2 para indivíduos;
+3.4.5) Plotando cos2 para variáveis selecionadas;
+3.4.6) Gráfico de barras do co2 para indivíduos;
+3.4.7) Biplots;
+3.5) Aplicando aos dados do cars;
+3.5.1) Plotando cos2;
+3.5.2) Plotando as contribuições;
+3.5.3) Biplots e seus elipsóides;
 
 Baseado nos cursos Unsupervised Learning with R e Dimensionality Reduction with R da DataCamp.
