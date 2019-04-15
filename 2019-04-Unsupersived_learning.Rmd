@@ -47,7 +47,7 @@ km.out
 
 ```
 
- ### 1.1) Visualizando clusters
+### 1.1) Visualizando clusters
 
 Uma das maneiras mais intuitivas de interpretar os resultados dos modelos k-means é plotando os dados como um gráfico de dispersão e usando cores para rotular a associação de cluster das amostras. Vou usar a função plot() padrão para realizar isso.
 
@@ -286,11 +286,11 @@ Trabalhando como cientista de dados, frequentemente você terá que lidar com da
 
 Bom, mas o que a PCA faz?
 
-* 1) a PCA permite remover o ruído causado pela correlação entre as variáveis, na prática ela decompõe a matriz de correlação;
+* a PCA permite remover o ruído causado pela correlação entre as variáveis, na prática ela decompõe a matriz de correlação;
 
-* 2) a PCA muda as o sistema de coordenadas original e estabelece novas dimensões no qual são chamdas de **componentes principais**;
+* a PCA muda as o sistema de coordenadas original e estabelece novas dimensões no qual são chamdas de **componentes principais**;
 
-* 3) e por último a PCA revela a verdadeira dimensionalidade dos dados, na prática a PCA nos ajuda reduzindo o número de dimensões;
+* e por último a PCA revela a verdadeira dimensionalidade dos dados, na prática a PCA nos ajuda reduzindo o número de dimensões;
 
 Conceitualmente existem 5 passos para realizar a PCA:
 
@@ -355,7 +355,7 @@ mtcars_pca$var$cos2
 
 ```
 
-O *mtcars_pca$var$contrib* demonstra as contribuições em porcentagem de todas as variáveis na determinação da componente principal, enquanto a função *dimdesc()* mostra as variáveis mais correlacionadas às primeiras componentes principais.
+A seguir a primeira linha do código demonstra as contribuições em porcentagem de todas as variáveis na determinação da componente principal, enquanto a função *dimdesc()* mostra as variáveis mais correlacionadas às primeiras componentes principais.
 
 ```{r, message=FALSE, warning=FALSE}
 
@@ -483,7 +483,7 @@ fviz_pca_var(mtcars_pca,
 
 ```
 
-#### 4.3.3) Plotando as contribuições das variáveis selecionadas pelo gráfico de barras
+#### 3.4.3) Plotando as contribuições das variáveis selecionadas pelo gráfico de barras
 
 Por último, fviz_contrib() produz barplots de individulas ou variáveis de contribuições (como no pedaço de código aqui). A linha vermelha corresponde à porcentagem esperada se a distribuição das contribuições fosse uniforme.
 
@@ -496,7 +496,7 @@ fviz_contrib(mtcars_pca,
 
 ```
 
-#### 4.3.4) Plotando cos2 para indivíduos
+#### 3.4.4) Plotando cos2 para indivíduos
 
 Um outro índice importante para interpretar modelos de PCA é o cosseno quadrado, abreviado como cos2 em FactoMineR e factextra. Esse índice reflete a precisão da representação de nossas variáveis ou indivíduos no plano da componente principal. Para plotar o cos2 dos indivíduos para mtcars_pca, precisamos apenas ajustar a função fviz_pca_ind(), ajustando o argumento col.ind para todos os indivíduos
 
@@ -509,7 +509,7 @@ fviz_pca_ind(mtcars_pca,
 
 ```
 
-#### 4.3.5) Plotando cos2 para variáveis selecionadas
+#### 3.4.5) Plotando cos2 para variáveis selecionadas
 
 O argumento select.ind serve para visualizarmos indivíduos com um cos2 maior que um valor de 0,8, como exemplo.
 
@@ -522,7 +522,7 @@ fviz_pca_ind(mtcars_pca,
 
 ```
 
-#### 4.3.6) Gráfico de barras do co2 para indivíduos
+#### 3.4.6) Gráfico de barras do co2 para indivíduos
 
 A função fviz_cos2() tem como output um gráfico de barras com a qualidade da representação de cada indivíduo.
 
@@ -535,7 +535,7 @@ fviz_cos2(mtcars_pca,
 
 ```
 
-#### 4.3.7) Biplots
+#### 3.4.7) Biplots
 
 Os biplots são gráficos que oferecem um jeito compacto de resumir as relações entre indivíduos, entre as variáveis, e também entre as variáveis e os indivíduos, isso tudo no mesmo gráfico! Por exemplo, aplicando a função fviz_pca_biplot() do pacote factoextra no objeto mtcars_pca, a interpretação das componentes principais agora fornece melhores informações e é muito mais fácil.
 
@@ -566,9 +566,9 @@ fviz_pca_ind(mtcars_pca,
 
 ```
 
-### 4.4) Aplicando aos dados do cars
+### 3.5) Aplicando aos dados do cars
 
-#### 4.4.1) Plotando cos2
+#### 3.5.1) Plotando cos2
 
 Como vimos anteriormente, um índice importante nos modelos de PCA é o cosseno ao quadrado, abreviado em FactoMineR e factextra como cos2, ele mostra a precisão da representação de suas variáveis ou indivíduos no plano das componentes principais.
 
@@ -592,7 +592,7 @@ fviz_cos2(pca_output_all, choice = "var", axes = 2, top = 10)
 
 Legal! Agora uma questão: o que o cos2 nos conta sobre a nova representação fornecida por seus modelos? Você pode dizer se eles são bons o suficiente em qualidade?
 
-#### 4.4.2) Plotando as contribuições
+#### 3.5.2) Plotando as contribuições
 
 Agora vamos preparar um número de gráficos para ajudá-lo a ter uma melhor percepção das contribuições das variáveis nas componentes principais extraídos. É importante ter em mente que as contribuições das variáveis significam, essencialmente, sua importância para a construção de um determinado componente principal.
 
@@ -615,7 +615,7 @@ fviz_contrib(pca_output_all, choice = "var", axes = 2, top = 5)
 
 Ótimo! Agora podemos entender a importância de uma variável na extração dos componentes principais! Você pode comparar os dois gráficos. Quais variáveis que estão em ambas as dimensões e quais estão em apenas em uma delas?
 
-#### 4.4.3) Biplots e seus elipsóides
+#### 3.5.3) Biplots e seus elipsóides
 
 Como mencionado anteriormente, os biplots são gráficos que fornecem uma maneira compacta e resume as relações entre indivíduos, variáveis e também entre variáveis e indivíduos. Além disso, os elipsóides podem ser adicionados em cima de um biplot e oferecem uma visão geral muito melhor do biplot com base nos agrupamentos de variáveis e indivíduos.
 
@@ -632,8 +632,4 @@ fviz_pca_biplot(pca_output_all, habillage = cars$wheeltype, addEllipses = TRUE, 
 
 ```
 
-Pergunta! O que significa quando duas variáveis estão próximas umas das outras em um biplot?
-
-R: Ambas variáveis possuem distância euclidiana pequena.
-
-# Código em construção ;* 
+# FIM ;* 
