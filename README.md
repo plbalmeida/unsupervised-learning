@@ -5,6 +5,8 @@ Muitas vezes no aprendizado de máquina o objetivo é encontrar padrões nos dad
 * O código está no formato do RMarkdown.
 * É necessário instalar o(s) seguinte(s) pacote(s) do R para rodar o código: readxl, FactoMineR, ade4, factoextra
 
+Conteúdo do tutorial:
+
 ### 1) k-means
 1.1) Visualizando clusters;
 1.2) Aleatoriedade do algoritmo k-means;
